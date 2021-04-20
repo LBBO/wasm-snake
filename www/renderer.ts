@@ -8,6 +8,7 @@ const boxSize = borderWidth + innerBoxSize
 const backgroundColor = '#000'
 const gridColor = '#444'
 const cherryColor = '#ad1457'
+const snakeColor = '#bababa'
 
 const getCanvasWidth = (game: SnakeGame) => game.width * boxSize + borderWidth
 const getCanvasHeight = (game: SnakeGame) => game.height * boxSize + borderWidth
@@ -46,7 +47,29 @@ const drawCherries = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
   )
 }
 
-const drawSnake = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {}
+const drawSnake = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
+  const snakePositionsPtr = game.snake_positions
+  const snakeLength = game.get_snake_length()
+  const snakePositions = new Uint32Array(
+    memory.buffer,
+    snakePositionsPtr,
+    snakeLength * 2,
+  )
+
+  ctx.fillStyle = snakeColor
+  for (let i = 0; i < snakeLength; i++) {
+    const x = snakePositions[i * 2]
+    const y = snakePositions[i * 2 + 1]
+    console.log('snake at', x, y)
+
+    ctx.fillRect(
+      x * boxSize + borderWidth,
+      y * boxSize + borderWidth,
+      innerBoxSize,
+      innerBoxSize,
+    )
+  }
+}
 
 export const draw = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
   // Reset canvas
