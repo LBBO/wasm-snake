@@ -5,6 +5,8 @@ use std::convert::TryInto;
 use tuple_conv::*;
 use wasm_bindgen::prelude::*;
 use web_sys::CanvasRenderingContext2d;
+mod collision_detection;
+use collision_detection::*;
 
 static BORDER_WIDTH: f64 = 2.0;
 static INNER_BOX_SIZE: f64 = 14.0;
@@ -97,6 +99,10 @@ impl SnakeGame {
             Direction::Down => 1,
             _ => 0,
         };
+
+        if test_collision(&self, dx, dy) {
+            panic!("ARGH");
+        }
 
         let message = format!("Snake should not be empty! {}", self.snake_positions.len());
         let &(x, y) = self.snake_positions.front().expect(&message);
