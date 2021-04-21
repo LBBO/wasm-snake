@@ -46,7 +46,7 @@ pub fn fill_square(ctx: &CanvasRenderingContext2d, game: &SnakeGame, x: u32, y: 
 
 fn generate_random_integer(min: u32, max: u32) -> u32 {
     let random = Math::random();
-    Math::floor(random * (max - min + 1) as f64) as u32 + min
+    Math::floor(random * (max - min) as f64) as u32 + min
 }
 fn generate_random_position(width: u32, height: u32) -> (u32, u32) {
     (
