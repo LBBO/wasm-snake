@@ -72,8 +72,12 @@ impl SnakeGame {
         if !got_cherry {
             self.snake_positions.pop_back();
         } else {
-            self.cherry_position = generate_random_position(self.width, self.height)
+            self.cherry_position = generate_random_position(self.width, self.height);
         }
+
+        // self.snake_positions.map(|&mut (x, y)| {
+        //     format!("{}, {}", x, y)
+        // })
     }
 
     #[wasm_bindgen(getter)]
@@ -92,8 +96,9 @@ impl SnakeGame {
     }
 
     #[wasm_bindgen(getter)]
-    pub fn snake_positions(&self) -> *const (u32, u32) {
+    pub fn snake_positions(&mut self) -> *const (u32, u32) {
         // let result: Vec<u32> = vec![12, 12];
+        self.snake_positions.make_contiguous();
         self.snake_positions.as_slices().0.as_ptr()
     }
 
