@@ -6,7 +6,9 @@ export class GameLoop {
   static readonly maxCounter = 4
   animationFrameId: ReturnType<typeof requestAnimationFrame> | null = null
 
-  constructor(private ctx: CanvasRenderingContext2D, private game: SnakeGame) {}
+  constructor(private ctx: CanvasRenderingContext2D, private game: SnakeGame) {
+    draw(this.ctx, this.game)
+  }
 
   toggle = () => {
     if (this.isPlaying) {
@@ -21,8 +23,8 @@ export class GameLoop {
     this.counter = this.counter % GameLoop.maxCounter
 
     if (this.counter === 0) {
-      this.game.tick()
-      draw(this.ctx, this.game)
+      this.game.tick(this.ctx)
+      // draw(this.ctx, this.game)
     }
 
     this.animationFrameId = requestAnimationFrame(this.play)

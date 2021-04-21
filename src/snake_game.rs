@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use std::convert::TryInto;
 use tuple_conv::*;
 use wasm_bindgen::prelude::*;
+use web_sys::CanvasRenderingContext2d;
 
 #[wasm_bindgen]
 pub enum Direction {
@@ -19,6 +20,21 @@ pub struct SnakeGame {
     snake_positions: VecDeque<(u32, u32)>,
     direction: Direction,
     cherry_position: (u32, u32),
+}
+
+#[wasm_bindgen]
+pub fn fill_square(ctx: &CanvasRenderingContext2d, game: &SnakeGame, x: u32, y: u32, color: &str) {
+    let border_width = 1;
+    let inner_box_size = 7;
+    let box_size = border_width + inner_box_size;
+
+    ctx.set_fill_style(&JsValue::from(color));
+    ctx.fill_rect(
+        (x * box_size + border_width).into(),
+        (y * box_size + border_width).into(),
+        (inner_box_size).into(),
+        (inner_box_size).into(),
+    )
 }
 
 fn generate_random_integer(min: u32, max: u32) -> u32 {
@@ -49,7 +65,7 @@ impl SnakeGame {
     }
 
     #[wasm_bindgen]
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self, ctx: &CanvasRenderingContext2d) {
         let dx: i64 = match self.direction {
             Direction::Left => -1,
             Direction::Right => 1,
@@ -67,17 +83,22 @@ impl SnakeGame {
             ((x as i64) + dx).try_into().unwrap(),
             ((y as i64) + dy).try_into().unwrap(),
         ));
+        self.draw_head(ctx);
 
         let got_cherry = x == self.cherry_position.0 && y == self.cherry_position.1;
         if !got_cherry {
-            self.snake_positions.pop_back();
+            let (x, y) = self.snake_positions.pop_back().expect("No back found");
+            fill_square(ctx, self, x, y, "#000")
         } else {
             self.cherry_position = generate_random_position(self.width, self.height);
+            fill_square(
+                ctx,
+                self,
+                self.cherry_position.0,
+                self.cherry_position.1,
+                "#ad1457",
+            )
         }
-
-        // self.snake_positions.map(|&mut (x, y)| {
-        //     format!("{}, {}", x, y)
-        // })
     }
 
     #[wasm_bindgen(getter)]
@@ -118,5 +139,12 @@ impl SnakeGame {
     #[wasm_bindgen(setter)]
     pub fn set_height(&mut self, value: u32) {
         self.height = value;
+    }
+}
+
+impl SnakeGame {
+    fn draw_head(&self, ctx: &CanvasRenderingContext2d) {
+        let &(x, y) = self.snake_positions.front().expect("No head found");
+        fill_square(ctx, self, x, y, "#bababa")
     }
 }

@@ -1,4 +1,4 @@
-import { SnakeGame } from '../pkg/index'
+import { fill_square, SnakeGame } from '../pkg/index'
 import { memory } from '../pkg/index_bg.wasm'
 
 const borderWidth = 1
@@ -39,12 +39,7 @@ const drawCherries = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
   const [cherryX, cherryY] = new Uint32Array(memory.buffer, cherriesPtr, 2)
 
   ctx.fillStyle = cherryColor
-  ctx.fillRect(
-    cherryX * boxSize + borderWidth,
-    cherryY * boxSize + borderWidth,
-    innerBoxSize,
-    innerBoxSize,
-  )
+  fill_square(ctx, game, cherryX, cherryY, cherryColor)
 }
 
 const drawSnake = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
