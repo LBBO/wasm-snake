@@ -9,13 +9,10 @@
   </a>
 </p>
 
-> Empty webpack project for WASM with Rust, TypeScript, SCSS, prettier and other
-> useful tools.
+> An educational snake implementation for learning rust and WASM
 
-Initially, this project was generated with
-[this template (`npm init rust-webpack`)](https://github.com/rustwasm/rust-webpack-template).
-Afterwards, TypeScript and other tools were added for a more pleasant
-development experience.
+This project is not meant to be good or anything; I just needed something to try
+out with WASM and rust.
 
 ### ✨ [Demo](http://lbbo.github.io/wasm-snake/)
 
