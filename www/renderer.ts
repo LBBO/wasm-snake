@@ -60,7 +60,6 @@ const drawSnake = (ctx: CanvasRenderingContext2D, game: SnakeGame) => {
   for (let i = 0; i < snakeLength; i++) {
     const x = snakePositions[i * 2]
     const y = snakePositions[i * 2 + 1]
-    console.log('snake at', x, y)
 
     ctx.fillRect(
       x * boxSize + borderWidth,

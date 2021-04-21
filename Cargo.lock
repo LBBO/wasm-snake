@@ -124,6 +124,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "tuple-conv"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fd6314683350324c1bb3d71a65fbeacb4e870cb4faf30b28d8a7787fb8116dd"
+
+[[package]]
 name = "unicode-xid"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -234,6 +240,7 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "js-sys",
+ "tuple-conv",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bindgen-test",
