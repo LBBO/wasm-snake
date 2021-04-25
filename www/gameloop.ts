@@ -1,4 +1,4 @@
-import { SnakeGame } from '../pkg/index'
+import { GameStatus, SnakeGame } from '../pkg/index'
 
 export class GameLoop {
   private counter = 1
@@ -8,23 +8,47 @@ export class GameLoop {
   constructor(private game: SnakeGame) {}
 
   toggle = () => {
-    if (this.isPlaying) {
-      this.pause()
-    } else {
-      this.play()
+    switch (this.game.status as GameStatus) {
+      case GameStatus.Running:
+        this.pause()
+        break
+      case GameStatus.Paused:
+        this.play()
+        break
+      default:
+        this.game.reset()
+        this.play()
+        break
     }
   }
 
-  play = () => {
+  play = (): GameStatus => {
+    this.game.status = GameStatus.Running
     this.counter++
     this.counter = this.counter % GameLoop.maxCounter
 
     if (this.counter === 0) {
-      this.game.tick()
-      // draw(this.ctx, this.game)
+      const newStatus = this.game.tick()
+
+      if (newStatus === GameStatus.Lost) {
+        alert('Lost!!')
+        this.counter = 0
+        this.animationFrameId = null
+
+        const button = document.querySelector<HTMLButtonElement>('.play-pause')
+        if (button) {
+          button.textContent = 'Restart'
+        }
+      }
     }
 
-    this.animationFrameId = requestAnimationFrame(this.play)
+    if (this.game.status === GameStatus.Running) {
+      this.animationFrameId = requestAnimationFrame(this.play)
+    } else {
+      console.log(this.game.status)
+    }
+
+    return this.game.status
   }
 
   pause = () => {
@@ -32,10 +56,11 @@ export class GameLoop {
       cancelAnimationFrame(this.animationFrameId)
     }
 
+    this.game.status = GameStatus.Paused
     this.animationFrameId = null
   }
 
   get isPlaying(): boolean {
-    return this.animationFrameId !== null
+    return this.game.status === GameStatus.Running
   }
 }

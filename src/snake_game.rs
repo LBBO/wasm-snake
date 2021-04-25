@@ -18,11 +18,23 @@ static CHERRY_COLOR: &str = "#ad1457";
 static SNAKE_COLOR: &str = "#bababa";
 
 #[wasm_bindgen]
+#[derive(Clone, Copy)]
 pub enum Direction {
     Up = 0,
     Down = 1,
     Left = 2,
     Right = 3,
+}
+
+static STARTING_DIRECTION: Direction = Direction::Left;
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, PartialEq)]
+pub enum GameStatus {
+    Paused = 0,
+    Running = 1,
+    Won = 2,
+    Lost = 3,
 }
 
 #[wasm_bindgen]
@@ -33,10 +45,11 @@ pub struct SnakeGame {
     direction: Direction,
     cherry_position: (u32, u32),
     ctx: CanvasRenderingContext2d,
+    status: GameStatus,
 }
 
 #[wasm_bindgen]
-pub fn fill_square(ctx: &CanvasRenderingContext2d, game: &SnakeGame, x: u32, y: u32, color: &str) {
+pub fn fill_square(ctx: &CanvasRenderingContext2d, x: u32, y: u32, color: &str) {
     ctx.set_fill_style(&JsValue::from(color));
     ctx.fill_rect(
         x as f64 * BOX_SIZE + BORDER_WIDTH,
@@ -69,13 +82,26 @@ impl SnakeGame {
             width,
             height,
             snake_positions: queue,
-            direction: Direction::Left,
+            direction: STARTING_DIRECTION,
             cherry_position: generate_random_position(width, height),
+            status: GameStatus::Paused,
         };
 
         game.draw();
 
         game
+    }
+
+    #[wasm_bindgen]
+    pub fn reset(&mut self) {
+        let mut queue = VecDeque::new();
+        queue.push_back(generate_random_position(self.width, self.height));
+        self.snake_positions = queue;
+
+        self.direction = STARTING_DIRECTION;
+        self.cherry_position = generate_random_position(self.width, self.height);
+        self.status = GameStatus::Paused;
+        self.draw();
     }
 
     #[wasm_bindgen]
@@ -86,37 +112,33 @@ impl SnakeGame {
     }
 
     #[wasm_bindgen]
-    pub fn tick(&mut self) {
-        let dx: i64 = match self.direction {
-            Direction::Left => -1,
-            Direction::Right => 1,
-            _ => 0,
-        };
-        let dy: i64 = match self.direction {
-            Direction::Up => -1,
-            Direction::Down => 1,
-            _ => 0,
-        };
+    pub fn tick(&mut self) -> GameStatus {
+        let (next_x, next_y) = self.compute_next_head_position();
 
-        if test_collision(&self, dx, dy) {
-            panic!("ARGH");
+        if test_collision(&self, next_x, next_y) {
+            self.status = GameStatus::Lost;
+        } else if self.status == GameStatus::Running {
+            let message = format!("Snake should not be empty! {}", self.snake_positions.len());
+            let &(x, y) = self.snake_positions.front().expect(&message);
+            self.snake_positions
+                .push_front((next_x as u32, next_y as u32));
+            self.draw_head();
+
+            let got_cherry = x == self.cherry_position.0 && y == self.cherry_position.1;
+            if !got_cherry {
+                self.delete_tail();
+            } else {
+                self.cherry_position = generate_random_position(self.width, self.height);
+
+                if self.get_snake_length() == (self.width * self.height).try_into().unwrap() {
+                    self.status = GameStatus::Won;
+                } else {
+                    self.draw_cherries();
+                }
+            }
         }
 
-        let message = format!("Snake should not be empty! {}", self.snake_positions.len());
-        let &(x, y) = self.snake_positions.front().expect(&message);
-        self.snake_positions.push_front((
-            ((x as i64) + dx).try_into().unwrap(),
-            ((y as i64) + dy).try_into().unwrap(),
-        ));
-        self.draw_head();
-
-        let got_cherry = x == self.cherry_position.0 && y == self.cherry_position.1;
-        if !got_cherry {
-            self.delete_tail();
-        } else {
-            self.cherry_position = generate_random_position(self.width, self.height);
-            self.draw_cherries();
-        }
+        self.status
     }
 
     #[wasm_bindgen(getter)]
@@ -132,6 +154,16 @@ impl SnakeGame {
     #[wasm_bindgen]
     pub fn get_snake_length(&self) -> usize {
         self.snake_positions.len()
+    }
+
+    #[wasm_bindgen(getter=status)]
+    pub fn get_status(&self) -> GameStatus {
+        self.status
+    }
+
+    #[wasm_bindgen(setter=status)]
+    pub fn set_status(&mut self, new_status: GameStatus) {
+        self.status = new_status;
     }
 
     #[wasm_bindgen(getter)]
@@ -170,16 +202,34 @@ impl SnakeGame {
     }
 }
 
+// Private methods
 impl SnakeGame {
+    fn compute_next_head_position(&self) -> (i64, i64) {
+        let dx: i64 = match self.direction {
+            Direction::Left => -1,
+            Direction::Right => 1,
+            _ => 0,
+        };
+        let dy: i64 = match self.direction {
+            Direction::Up => -1,
+            Direction::Down => 1,
+            _ => 0,
+        };
+        let message = format!("Snake should not be empty! {}", self.snake_positions.len());
+        let &(x, y) = self.snake_positions.front().expect(&message);
+
+        ((x as i64) + dx, (y as i64) + dy)
+    }
+
     fn draw_head(&self) {
         let &(x, y) = self.snake_positions.front().expect("No head found");
-        fill_square(&self.ctx, self, x, y, SNAKE_COLOR)
+        fill_square(&self.ctx, x, y, SNAKE_COLOR)
     }
 
     fn draw_snake(&self) {
         for &position in self.snake_positions.iter() {
             let (x, y) = position;
-            fill_square(&self.ctx, self, x, y, SNAKE_COLOR);
+            fill_square(&self.ctx, x, y, SNAKE_COLOR);
         }
     }
 
@@ -190,7 +240,6 @@ impl SnakeGame {
         );
         fill_square(
             &self.ctx,
-            self,
             self.cherry_position.0,
             self.cherry_position.1,
             CHERRY_COLOR,
@@ -199,7 +248,7 @@ impl SnakeGame {
 
     fn delete_tail(&mut self) {
         let (x, y) = self.snake_positions.pop_back().expect("No tail found");
-        fill_square(&self.ctx, self, x, y, BACKGROUND_COLOR)
+        fill_square(&self.ctx, x, y, BACKGROUND_COLOR)
     }
 
     fn draw_grid(&self) {

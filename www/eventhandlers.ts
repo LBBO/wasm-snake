@@ -21,7 +21,6 @@ export const setupEventHandlers = (game: SnakeGame, gameLoop: GameLoop) => {
   setupPlayPauseButton(gameLoop)
 
   document.addEventListener('keydown', (e) => {
-    console.log(e.key)
     switch (e.key) {
       case 'ArrowUp':
         game.set_direction(Direction.Up)
