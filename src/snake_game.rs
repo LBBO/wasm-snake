@@ -60,9 +60,7 @@ fn generate_random_position(width: u32, height: u32) -> (u32, u32) {
 #[wasm_bindgen]
 impl SnakeGame {
     #[wasm_bindgen(constructor)]
-    pub fn new(ctx: CanvasRenderingContext2d, width: u32, height: u32) -> SnakeGame {
-        console_log::init_with_level(Level::Debug).expect("error initializing logger");
-
+    pub fn new(ctx: CanvasRenderingContext2d, width: u32, height: u32) -> Self {
         let mut queue = VecDeque::new();
         queue.push_back(generate_random_position(width, height));
 

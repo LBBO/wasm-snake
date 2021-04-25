@@ -1,5 +1,5 @@
+use log::*;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 mod snake_game;
 pub use snake_game::*;
@@ -19,9 +19,10 @@ pub fn main_js() -> Result<(), JsValue> {
     // It's disabled in release mode so it doesn't bloat up the file size.
     #[cfg(debug_assertions)]
     console_error_panic_hook::set_once();
+    console_log::init_with_level(Level::Debug).expect("error initializing logger");
 
     // Your code goes here!
-    console::log_1(&JsValue::from_str("Hello world!"));
+    debug!("Hello world!");
 
     Ok(())
 }
